@@ -1,13 +1,14 @@
 #!/bin/bash
 
 nrpecfg="/etc/nagios/nrpe.cfg"
-tmpfile="/tmp/nrpe_run_all.tmp"
+tmpfile=$(mktemp)
 
 incfiles=$(cat $nrpecfg | grep "^include" | cut -d= -f2)
 $(cat $nrpecfg | grep "^command\[" | cut -d= -f2 >> $tmpfile)
 cn=$(cat $nrpecfg | grep "^command\[" | cut -d[ -f2 | cut -d] -f1)
 
-function getcoms() {
+function getcoms()
+{
 	for file in ${incfiles[@]}
 	do
 		if [ -d "$file" ]; then
@@ -22,11 +23,11 @@ function getcoms() {
 
 getcoms
 i=0
-while [ "$i" -lt "$(wc -l $tmpfile | cut -d' ' -f1)" ];
+while [ "$i" -lt "$(wc -l  < $tmpfile" ];
 do
 	i=$[$i + 1];
 	printf "%-25s: " $(echo $cn | cut -d' ' -f$i)
 	$(echo $(cat $tmpfile | head -$i | tail -1))
 done
 
-$(rm $tmpfile) 
+rm $tmpfile 
