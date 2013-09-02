@@ -12,8 +12,10 @@ function getcoms()
 	for file in ${incfiles[@]}
 	do
 		if [ -d "$file" ]; then
-			incfiles="$file*"
-			getcoms
+			if [ $(ls $file | grep -E '\.cfg$' | wc -l) -gt 0 ]; then
+				incfiles="$file*.cfg"
+				getcoms
+			fi
 		else
 			$(cat $file | grep "^command\[" | cut -d= -f2 >> $tmpfile)
 			cn="$cn $(cat $file | grep "^command\[" | cut -d[ -f2 | cut -d] -f1)"
@@ -27,7 +29,7 @@ while [ "$i" -lt "$(wc -l  < $tmpfile)" ];
 do
 	i=$[$i + 1];
 	printf "%-25s: " $(echo $cn | cut -d' ' -f$i)
-	$(echo $(cat $tmpfile | head -$i | tail -1))
+	{ mispipe "$(echo $(cat $tmpfile | head -$i | tail -1))" "cut -d'|' -f1"; echo "EXIT:$?"; } | paste -s
 done
 
 rm $tmpfile 
